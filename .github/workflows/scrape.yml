@@ -1,0 +1,27 @@
+name: Scrape latest data
+
+on:
+  push:
+  workflow_dispatch:
+  schedule:
+    - cron:  '6,14,26,38,46,53 * * * *'
+
+jobs:
+  scheduled:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out this repo
+      uses: actions/checkout@v2
+    - name: Install xmllint
+      run: sudo apt-get install -y libxml2-utils
+    - name: Fetch latest data
+      run: |-
+        curl "https://offenedaten.frankfurt.de/dataset/bcb0154c-1a6f-4ce4-aebc-cdedbaed6671/resource/d7cdece0-7e0c-4115-95e5-2a26921ca273/download/verkehrsmeldung.xml" | xmllint --format - > verkehrsmeldung.xml
+    - name: Commit and push if it changed
+      run: |-
+        git config user.name "Automated"
+        git config user.email "actions@users.noreply.github.com"
+        git add -A
+        timestamp=$(date -u)
+        git commit -m "Latest data: ${timestamp}" || exit 0
+        git push
